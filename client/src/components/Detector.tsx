@@ -1,9 +1,12 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { RawImage } from '@huggingface/transformers';
 import type { PreTrainedModel, Processor } from '@huggingface/transformers';
 import { postprocess } from '../utils/postprocessing';
 import { drawDetections } from '../utils/drawBoxes';
 import type { Detection } from '../types/detection';
+
+const ROLLING_WINDOW = 30;
+const backend = navigator.gpu ? 'WebGPU' : 'WASM';
 
 interface DetectorProps {
   model: PreTrainedModel;
@@ -17,9 +20,14 @@ export default function Detector({ model, processor }: DetectorProps) {
   const isProcessingRef = useRef(false);
   const lastDetectionsRef = useRef<Detection[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const inferenceTimesRef = useRef<number[]>([]);
+
+  const [stats, setStats] = useState({ inferenceMs: 0, fps: 0 });
 
   const runInference = useCallback(
     async (video: HTMLVideoElement, width: number, height: number) => {
+      const t0 = performance.now();
+
       // Draw video to offscreen canvas to get pixel data
       const offscreen = new OffscreenCanvas(video.videoWidth, video.videoHeight);
       const offCtx = offscreen.getContext('2d')!;
@@ -34,6 +42,15 @@ export default function Detector({ model, processor }: DetectorProps) {
 
       // Run model
       const output = await model(inputs);
+
+      const elapsed = performance.now() - t0;
+
+      // Update rolling average
+      const times = inferenceTimesRef.current;
+      times.push(elapsed);
+      if (times.length > ROLLING_WINDOW) times.shift();
+      const avgMs = times.reduce((a, b) => a + b, 0) / times.length;
+      setStats({ inferenceMs: Math.round(avgMs), fps: Math.round(1000 / avgMs) });
 
       // Extract raw tensor data
       const logits = output.logits.data as Float32Array;
@@ -108,6 +125,11 @@ export default function Detector({ model, processor }: DetectorProps) {
     <div className="flex flex-col items-center gap-4">
       <video ref={videoRef} className="hidden" playsInline muted />
       <canvas ref={canvasRef} className="max-w-full rounded-lg" />
+      <div className="flex gap-6 rounded-lg bg-gray-900 px-6 py-3 text-sm text-gray-300">
+        <span>Inference: <strong className="text-white">{stats.inferenceMs} ms</strong></span>
+        <span>FPS: <strong className="text-white">{stats.fps}</strong></span>
+        <span>Backend: <strong className="text-white">{backend}</strong></span>
+      </div>
     </div>
   );
 }
