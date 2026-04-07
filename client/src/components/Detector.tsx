@@ -3,6 +3,7 @@ import { RawImage } from '@huggingface/transformers';
 import type { PreTrainedModel, Processor } from '@huggingface/transformers';
 import { postprocess } from '../utils/postprocessing';
 import { drawDetections } from '../utils/drawBoxes';
+import { pushDetections, startAggregator, stopAggregator } from '../utils/detectionAggregator';
 import type { Detection } from '../types/detection';
 
 const ROLLING_WINDOW = 30;
@@ -58,7 +59,7 @@ export default function Detector({ model, processor }: DetectorProps) {
       const numDetections = output.logits.dims[1];
       const numClasses = output.logits.dims[2];
 
-      return postprocess(logits, predBoxes, numDetections, numClasses, width, height);
+      return postprocess(logits, predBoxes, numDetections, numClasses, width, height, 0.7);
     },
     [model, processor],
   );
@@ -97,6 +98,7 @@ export default function Detector({ model, processor }: DetectorProps) {
           runInference(video, canvas.width, canvas.height)
             .then((detections) => {
               lastDetectionsRef.current = detections;
+              pushDetections(detections);
             })
             .catch((err) => {
               console.error('Inference error:', err);
@@ -110,6 +112,7 @@ export default function Detector({ model, processor }: DetectorProps) {
       }
 
       animFrameRef.current = requestAnimationFrame(loop);
+      startAggregator();
     }
 
     start().catch((err) => console.error('Camera start error:', err));
@@ -118,6 +121,7 @@ export default function Detector({ model, processor }: DetectorProps) {
       stopped = true;
       cancelAnimationFrame(animFrameRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
+      stopAggregator();
     };
   }, [runInference]);
 

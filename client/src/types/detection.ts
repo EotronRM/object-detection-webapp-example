@@ -4,3 +4,10 @@ export interface Detection {
   classId: number;
   label: string;
 }
+
+export interface DetectionSummary {
+  timestamp: string;
+  intervalMs: number;
+  framesProcessed: number;
+  detections: Record<string, { count: number; avgConfidence: number }>;
+}
