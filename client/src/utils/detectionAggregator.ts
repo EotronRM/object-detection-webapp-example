@@ -1,7 +1,7 @@
 import type { Detection, DetectionSummary } from '../types/detection';
 
 const INTERVAL_MS = 5000;
-const SERVER_URL = 'http://localhost:3001/api/detections';
+const SERVER_URL = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3001'}/api/detections`;
 
 let frames: Detection[][] = [];
 let timerId: ReturnType<typeof setInterval> | null = null;
