@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { writeSummary } from './influx.js';
 
 interface ClassSummary {
   count: number;
@@ -33,6 +34,8 @@ app.post('/api/detections', (req, res) => {
       console.log(`  ${label}: ${info.count}x (avg confidence: ${(info.avgConfidence * 100).toFixed(1)}%)`);
     }
   }
+
+  writeSummary(summary);
 
   res.json({ ok: true });
 });
