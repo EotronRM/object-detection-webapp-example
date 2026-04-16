@@ -1,0 +1,21 @@
+{
+  "name": "mcp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
+    "@modelcontextprotocol/sdk": "^1.21.0",
+    "express": "^5.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.12.2",
+    "tsx": "^4.19.4",
+    "typescript": "~6.0.2"
+  }
+}

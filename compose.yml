@@ -23,6 +23,20 @@ services:
       influxdb:
         condition: service_healthy
 
+  mcp:
+    build: ./mcp
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: my-super-secret-token
+      INFLUXDB_ORG: detection-org
+      INFLUXDB_BUCKET: detections
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
   influxdb:
     image: influxdb:2
     ports:
