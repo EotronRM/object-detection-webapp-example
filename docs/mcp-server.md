@@ -118,7 +118,7 @@ docker compose up --build mcp
 
 A project-level config already exists at the repo root:
 
-```json
+```json5
 // .mcp.json
 {
   "mcpServers": {
