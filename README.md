@@ -5,7 +5,14 @@ Real-time object detection running in the browser using YOLOv26n. The model runs
 ## Architecture
 
 - **client/** — React + TypeScript + Vite app that captures webcam video, runs YOLOv26n inference per frame, and displays bounding boxes with an FPS/stats panel
-- **server/** — Express v5 + TypeScript server that receives and logs aggregated detection summaries
+- **server/** — Express v5 + TypeScript server that receives detection summaries and writes them to InfluxDB
+- **mcp/** — MCP (Model Context Protocol) server that exposes detection data from InfluxDB to AI assistants over Streamable HTTP
+- **grafana/** — Provisioned Grafana dashboards for visualizing detection metrics
+
+## Documentation
+
+- [Time-Series Storage with InfluxDB + Grafana](docs/tsdb-and-grafana.md) — how detection data flows into InfluxDB and how Grafana visualizes it
+- [MCP Server for Detection Data](docs/mcp-server.md) — connecting Claude Code or gemini-cli to query detection data conversationally
 
 ## Prerequisites
 
@@ -36,7 +43,15 @@ The client runs at `http://localhost:5173` and the server at `http://localhost:3
 docker compose up --build
 ```
 
-The client is served at `http://localhost:8080` and the server at `http://localhost:3001`.
+| Service   | URL                     |
+|-----------|-------------------------|
+| Client    | http://localhost:8080   |
+| Server    | http://localhost:3001   |
+| MCP       | http://localhost:3002/mcp |
+| InfluxDB  | http://localhost:8086   |
+| Grafana   | http://localhost:3000   |
+
+See [`docs/tsdb-and-grafana.md`](docs/tsdb-and-grafana.md) and [`docs/mcp-server.md`](docs/mcp-server.md) for details on the InfluxDB / Grafana setup and MCP server respectively.
 
 ## How It Works
 
